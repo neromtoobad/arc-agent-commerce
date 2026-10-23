@@ -1,13 +1,16 @@
 # arc-agent-commerce
 
-Five small Solidity contracts for running a business with AI agents on [Arc](https://arc.network), in USDC, with
-limits a human sets and the agents can't talk their way past. Fork them, import them, or deploy the whole kit in
-one script.
+![License: MIT](https://img.shields.io/badge/license-MIT-green) ![Solidity 0.8.26](https://img.shields.io/badge/solidity-0.8.26-363636) ![Tests: 52](https://img.shields.io/badge/tests-52%20passing-brightgreen) ![Arc mainnet](https://img.shields.io/badge/Arc%20mainnet-verified-0b5fff)
 
-They run in production at **[Syncly](https://hiresyncly.site)**: an AI team that does $1 jobs for small businesses
-in Nigeria (websites, promo videos, ad campaigns, reports) while an AI CFO runs the money. Real customers pay into
-`JobEscrow`, most of them in naira through `NairaDesk`, and the agents' tool spending comes out of `SynclyVault`.
-Every payment is on the [live traction record](https://hiresyncly.site/api/traction.md).
+**Guardrails for AI agents that handle money.** Five dependency-free Solidity contracts for running a business with AI
+agents on [Arc](https://arc.network) in USDC. A human sets the limits, and the agents can't talk their way past them.
+Fork the contracts, import them with Foundry, or deploy the whole kit with one script.
+
+**In production.** The kit is the money layer of **[Syncly](https://hiresyncly.site)**, an AI team that sells small
+businesses websites, promo videos, ad campaigns and reports while an AI CFO runs the treasury. Since September 2026
+its customers have paid into `JobEscrow` (many of them in naira through `NairaDesk`), missed deadlines have been
+refunded with the bond automatically, and every agent's tool spending has come out of `SynclyVault`. Every
+transaction is on the [live record](https://hiresyncly.site/api/traction.md).
 
 | Contract | What it gives you | Arc mainnet (verified, exact match) |
 |---|---|---|
@@ -41,7 +44,7 @@ No dependencies: plain Solidity 0.8.26, 52 tests, MIT licensed.
 
 ### JobEscrow: pay only for accepted work
 
-A plain escrow lets the seller (or an AI judge) decide the work is done. Here only the **customer** can accept, and
+A plain escrow lets the seller, or an AI evaluator, decide the work is done. Here only the **customer** can accept, and
 the seller backs every quote with a bond it loses if the customer rejects or the deadline passes.
 
 - `open(id, customer, amount, bond, specHash, fundBy, deliverBy)`: the operator quotes a job. The bond is locked in
@@ -79,7 +82,7 @@ through a local processor; once the payment is confirmed off-chain, the agent ke
 
 ### InvoiceBook: the payee can't change after booking
 
-Built against the four failure modes in Canteen's [Agents and Ledgers](https://thecanteenapp.com/analysis/2026/09/12/agents-and-ledgers.html):
+It closes the four ways an AI bookkeeper can pay wrongly and still balance the books (catalogued in [Agents and Ledgers in 2026](https://thecanteenapp.com/analysis/2026/09/12/agents-and-ledgers.html)):
 
 - **Wrong payee:** `book(id, payee, amount, due, docHash)` fixes the payee. A changed pay link can't redirect money.
 - **Double pay:** `pay(id)` works once.
@@ -103,6 +106,17 @@ curl -L https://foundry.paradigm.xyz | bash && foundryup
 git clone https://github.com/neromtoobad/arc-agent-commerce && cd arc-agent-commerce
 forge build
 forge test        # 52 tests
+```
+
+Use it as a library:
+
+```bash
+forge install neromtoobad/arc-agent-commerce
+```
+
+```solidity
+import {JobEscrow} from "arc-agent-commerce/JobEscrow.sol";
+import {SynclyVault} from "arc-agent-commerce/SynclyVault.sol";
 ```
 
 Deploy the whole kit (see the variables at the top of the script):
@@ -167,12 +181,17 @@ await payer.writeContract({ address: BOOK, abi: book, functionName: 'pay', args:
 | Agent (desk / autopay key) | fund desk jobs once per payment, autopay approved invoices under caps | send the float or bill money anywhere else |
 | Owner (a human) | set the rules, co-sign, withdraw, change keys | nothing is hidden from them |
 
-## Status
+## Security
 
 These contracts hold real customer money on Arc mainnet and have a full test suite, but they have **not been
-audited**. Read them (about 950 lines in total), test your deployment, and set the caps low.
+audited** yet. Read them (about 950 lines in total), test your own deployment, and start with low caps.
 
-Questions or improvements: open an issue or a pull request.
+To report a vulnerability, use [GitHub's private reporting](https://github.com/neromtoobad/arc-agent-commerce/security/advisories/new)
+rather than a public issue.
+
+## Contributing
+
+Issues and pull requests are welcome. Run `forge test` before opening a PR, and add a test for any behaviour change.
 
 ## License
 
